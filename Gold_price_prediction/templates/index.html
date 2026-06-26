@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gold Signals Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Gold XAUUSD Dashboard</h1>
+    <div id="priceBox">Loading...</div>
+  </header>
+  <main>
+    <canvas id="goldChart" height="100"></canvas>
+    <div class="signal-card">
+      <h2>Signal: <span id="signal">-</span></h2>
+      <p id="reason">-</p>
+      <small>Logic: 20 SMA vs 50 SMA crossover. Not financial advice.</small>
+    </div>
+  </main>
+<script>
+async function loadData() {
+  const res = await fetch("/api/data");
+  const data = await res.json();
+  document.getElementById("priceBox").innerText = `Gold: $${data.last_price} USD/oz`;
+  document.getElementById("signal").innerText = data.signal;
+  document.getElementById("signal").className = data.signal.toLowerCase();
+  document.getElementById("reason").innerText = data.reason;
+  const ctx = document.getElementById('goldChart');
+  if(window.chart) window.chart.destroy();
+  window.chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.labels,
+      datasets: [
+        { label: 'Price', data: data.price, borderWidth: 2, tension: 0.1 },
+        { label: 'SMA 20', data: data.sma20, borderDash: [5,5], borderWidth: 1 },
+        { label: 'SMA 50', data: data.sma50, borderDash: [5,5], borderWidth: 1 }
+      ]
+    },
+    options: { responsive: true, scales: { x: { ticks: { maxTicksLimit: 10 } }
+  });
+}
+loadData();
+setInterval(loadData, 60000);
+</script>
+</body>
+</html>
